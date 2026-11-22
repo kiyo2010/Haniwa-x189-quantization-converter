@@ -181,7 +181,7 @@ def metadata(reader, cfg):
          reader.get_field("tokenizer.ggml.merges") is not None, "Original Qwen BPE vocabulary geometry")
 
 
-def _prefix(meta, rows, *, from_model=False):
+def _prefix(meta, rows, *, from_model=False, recipe=None):
     stop = max(f.offset + sum(x.nbytes for x in f.parts) for f in meta.fields.values())
     p = bytearray(meta.data[:stop])
     count = len(meta.tensors) if from_model else 0
@@ -192,6 +192,13 @@ def _prefix(meta, rows, *, from_model=False):
     else:
         need(0<=len(meta.data)-stop<ALIGNMENT and not meta.data[stop:].any(),"Invalid vocabulary-only GGUF")
     struct.pack_into("<Q", p, 8, len(rows))
+    if recipe is not None:
+        need(meta.get_field("x189.recipe") is None,"Input already contains X189 recipe metadata")
+        kv_count=struct.unpack_from("<Q",p,16)[0]
+        struct.pack_into("<Q",p,16,kv_count+1)
+        key=b"x189.recipe"
+        value=recipe.encode("utf8")
+        p+=struct.pack("<Q",len(key))+key+struct.pack("<IQ",int(gguf.GGUFValueType.STRING),len(value))+value
     pos = 0
     for r in rows:
         name = r["name"].encode("utf-8")
@@ -232,15 +239,17 @@ def _write_rows(out, rows):
         out.write(bytes(rounded(row["bytes"]) - row["bytes"]))
 
 
-def _verify(path, expected_meta, rows, prefix_bytes, size):
+def _verify(path, expected_meta, rows, prefix_bytes, size, *, recipe=None):
     image = gguf.GGUFReader(path, "r")
     need(image.data_offset == prefix_bytes and image.alignment == ALIGNMENT and
          path.stat().st_size == size and len(image.tensors) == len(rows),
          "Independent GGUF geometry changed")
-    need(tuple(expected_meta.fields) == tuple(image.fields), "Independent GGUF metadata keys changed")
+    appended = ("x189.recipe",) if recipe is not None else ()
+    need(tuple(expected_meta.fields)+appended==tuple(image.fields),"Independent GGUF metadata keys changed")
+    if recipe is not None:
+        need(field(image,"x189.recipe")==recipe,"Independent X189 recipe marker differs")
     for key, f in expected_meta.fields.items():
-        # Synthetic GGUF.tensor_count is the one header field intentionally replaced.
-        if key == "GGUF.tensor_count":
+        if key == "GGUF.tensor_count" or (recipe is not None and key=="GGUF.kv_count"):
             continue
         need(all(x.tobytes() == y.tobytes() for x,y in zip(f.parts,image.fields[key].parts,strict=True)),
              f"GGUF metadata changed for {key}")
@@ -259,7 +268,7 @@ def _verify(path, expected_meta, rows, prefix_bytes, size):
         need(file.tell() == size and not file.read(1), "GGUF unaccounted trailer")
 
 
-def write_replacements(source, output, records):
+def write_replacements(source, output, records, *, recipe):
     """Write a full standard GGUF with an unchanged model's names, shapes and metadata."""
     meta = gguf.GGUFReader(source,"r")
     expected = {t.name:t for t in meta.tensors}
@@ -282,7 +291,7 @@ def write_replacements(source, output, records):
             sha = None
         rows.append(dict(name=name,shape=shape,type=kind.name,ggml_type=int(kind),bytes=count,
                          source=path,source_offset=offset,source_stamp=stamp(path.stat()),expected_sha256=sha))
-    header,extent = _prefix(meta,rows,from_model=True)
+    header,extent = _prefix(meta,rows,from_model=True,recipe=recipe)
     temp = tempfile.NamedTemporaryFile(dir=output.parent,prefix=".x189-model-",delete=False)
     stage = Path(temp.name)
     try:
@@ -300,7 +309,7 @@ def write_replacements(source, output, records):
             dst.flush()
             os.fsync(dst.fileno())
             need(dst.tell()==len(header)+extent,"Final GGUF extent differs")
-        _verify(stage,meta,rows,len(header),len(header)+extent)
+        _verify(stage,meta,rows,len(header),len(header)+extent,recipe=recipe)
         digest = sha_file(stage)
         os.link(stage,output)
     finally:

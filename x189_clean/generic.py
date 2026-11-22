@@ -166,7 +166,7 @@ def rank_correction(encoder,name,weight,decoded,moment,padded_cols):
 
 
 def token_frequency(source,corpus,args,env,limit,n):
-    tokenizer = args.llama_imatrix.parent/"llama-tokenize"
+    tokenizer = args.llama_imatrix.resolve().parent/"llama-tokenize"
     cmd = [binary(tokenizer),"-m",str(source),"-f",str(corpus),"--ids","--no-bos","--no-escape"]
     run = subprocess.run(cmd,env=env,check=True,stdout=subprocess.PIPE,text=True)
     ids = np.asarray(json.loads(run.stdout)[:limit],dtype=np.int64)
@@ -260,7 +260,7 @@ def run(args):
         importance = Importance(gguf.GGUFReader(stats,"r"))
         records,results,lattice_bytes = encode_tensors(source,importance,stock,corpus,args,env,scratch)
         portable.require(all(portable.stamp(p)==s for p,s in stamps.items()),"The BF16 source changed")
-        report = write_replacements(stock,output,records)
+        report = write_replacements(stock,output,records,recipe=RECIPE)
         report.update(recipe=RECIPE,source=provenance,calibration_sha256=corpus_sha,windows=importance.chunks,
             window_size=importance.context,calibration_metric="activation_second_moment_diagonal",
             methods=dict(Counter(r["method"] for r in results.values())),
