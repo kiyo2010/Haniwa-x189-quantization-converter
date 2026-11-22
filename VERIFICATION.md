@@ -1,19 +1,14 @@
-# 動作確認
+# Verification
 
-## デスクトップGUI
+The Haniwa X189 converter was tested on Linux x86-64 with Python 3.12, CUDA conversion, and llama.cpp b12487.
 
-Linux x86-64でWayland上の起動を確認しました。ファイル選択画面からHugging FaceのSmolLM2-135M BF16、校正テキスト、日本語と空白を含むGGUF保存先を指定し、CUDAで変換しました。生成した517,035,712 BのGGUFから272テンソルと `X189-Generic-v1` の識別子を読み戻し、無改造のllama.cpp b12487のCPU版でテキストを生成しました。停止後の再実行と、既存の保存先を指定した際の上書き防止も確認しました。
+| BF16 checkpoint | Entry point | GGUF tensors | Output size (bytes) |
+| --- | --- | ---: | ---: |
+| SmolLM2-135M (Llama) | Desktop GUI | 272 | 517,035,680 |
+| TinyMoE (Mixtral family) | CLI | 103 | 232,723,584 |
 
-## 汎用レシピ X189-Generic-v1
+Both files passed tensor readback and contained `Haniwa X189` in `x189.recipe`. The SmolLM2 GGUF also generated text with the upstream llama.cpp CPU binary. For TinyMoE, the public FP32 checkpoint was cast to BF16 before conversion.
 
-2026年11月23日 JST。GitHubから取得したソースと独立したPython 3.12仮想環境で変換しました。校正は各モデルで128トークンの4窓を用い、出力GGUFを無改造のllama.cpp b12487でCPUとGPUの両方から読み込み、テキストを生成しました。
+The GUI was tested with file dialogs, a Japanese output filename containing spaces, cancellation and retry, and an existing destination file. The CLI architecture listing was checked for Llama, Qwen2, and Mixtral.
 
-| BF16モデル | 照合したGGUFテンソル | X189格子 | IQ4_NL | GGUF容量（B） | RTX 5090へのオフロード |
-|---|---:|---:|---:|---:|---:|
-| SmolLM2-135M（Llama） | 272 | 151 | 60 | 517,035,712 | 31/31 |
-| Qwen2.5-0.5B（Qwen2） | 290 | 121 | 48 | 1,963,155,520 | 25/25 |
-| TinyMoE（Mixtral系） | 103 | 32 | 40 | 232,723,584 | 11/11 |
-
-全テンソルの名称・型・形状・保存バイトと、GGUF内の `x189.recipe` を読み戻して照合しました。各モデルでX189格子の符号化・復元、語彙残差、低ランク補正を実行しました。TinyMoEのみ、公開FP32チェックポイントのテンソルをBF16にキャストして入力に使用しました。
-
-[変換手順](README.md) · [公式llama.cpp b12487](https://github.com/ggml-org/llama.cpp/releases/tag/b12487)
+[Conversion instructions](README.md) · [llama.cpp b12487](https://github.com/ggml-org/llama.cpp/releases/tag/b12487)
