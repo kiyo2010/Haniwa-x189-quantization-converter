@@ -42,6 +42,11 @@ def fixture():
     cold=codec.decode(BytesIO(stream.getvalue()),restore.__setitem__,bits.shape)
     assert card["sha256"]==cold["sha256"] and card["bytes"]==len(stream.getvalue())
     assert np.linalg.norm(restore-reference)<np.linalg.norm(reference)
+    zeros=np.zeros_like(reference)
+    zero_wire=BytesIO()
+    codec.encode("zero-tile",zeros.shape,lambda a,b:zeros[a:b],zero_wire,gram)
+    codec.decode(BytesIO(zero_wire.getvalue()),restore.__setitem__,zeros.shape)
+    np.testing.assert_array_equal(restore,zeros)
     for wire in (stream.getvalue()[:-1],stream.getvalue()+b"0",b"XXXX"+stream.getvalue()[4:]):
         try:
             codec.decode(BytesIO(wire),restore.__setitem__,bits.shape)

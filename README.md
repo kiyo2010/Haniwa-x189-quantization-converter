@@ -1,6 +1,6 @@
-# X189-KFTT-v2
+# X189 BF16 → GGUF
 
-公式Qwen3-1.7BのBF16チェックポイントを、公開KFTTの英日訓練データで校正し、8次元格子コードと標準IQを使って標準Qwen3 GGUFに変換するCLIです。校正データと元モデルは利用者が取得します。生成したGGUFはトークナイザーを内蔵し、無改造のllama.cppで読み込めます。
+Hugging FaceのBF16言語モデルをX189で量子化し、標準GGUFに変換するCLIです。対応アーキテクチャは使用するllama.cppの変換器と推論ランタイムで決まります。生成したGGUFはトークナイザーを内蔵します。
 
 ## インストール
 
@@ -16,7 +16,27 @@ python -m pip install --resume-retries 30 \
   --extra-index-url https://pypi.org/simple -r requirements.txt
 ```
 
-## 公式の入力を用意する
+## BF16モデルをX189で変換する
+
+元のHugging Faceチェックポイントのディレクトリ、校正用UTF-8テキスト、同じ版のllama.cppソース・バイナリを用意します。バイナリのディレクトリには `llama-imatrix`、`llama-tokenize`、`libggml-base.so` が必要です。[検証版 llama.cpp b12487](https://github.com/ggml-org/llama.cpp/releases/tag/b12487)
+
+```sh
+python -m x189_clean list-models --llama-source "$LLAMA_SRC"
+
+CUDA_VISIBLE_DEVICES=0 python -m x189_clean convert \
+  --checkpoint "$BF16" --calibration-text "$CALIBRATION_TEXT" \
+  --llama-source "$LLAMA_SRC" --llama-imatrix "$LLAMA_CPU/llama-imatrix" \
+  --ggml-lib "$LLAMA_CPU/libggml-base.so" \
+  --work "$WORK" --output "$OUTPUT" --device cuda:0
+```
+
+`$BF16` は `config.json`、トークナイザー、BF16重みが揃ったディレクトリです。分割safetensorsと対応するPyTorch state dictionaryも処理します。`$CALIBRATION_TEXT` はモデルの用途に合ったテキスト、`$WORK` は書き込み可能な作業先、`$OUTPUT` は新規GGUFのファイル名です。GPUのない環境では `--device cpu` を指定できます。校正の範囲は `--context` と `--chunks` で調整します。
+
+汎用レシピはモデルの入力活性の二次モーメントを採り、行列形状と役割に応じて8次元格子量子化、標準IQ、低ランク補正、語彙残差を適用します。格子で量子化したテンソルは、その復元値を標準GGUFのF32として格納します。IQブロックを割り当てたテンソルはIQ形式で格納します。変換後の照合とテンソル別の処理は作業先の `<出力名>.x189.json` に記録します。
+
+## Qwen3-1.7Bの固定レシピ
+
+X189-KFTT-v2の固定配分で変換する場合は、次の入力とコマンドを使用します。
 
 1. Qwen3-1.7Bの固定リビジョンを取得します。下の例は、仮想環境に導入済みのHugging Face CLIを使用します。[公式スナップショット](https://huggingface.co/Qwen/Qwen3-1.7B/tree/70d244cc86ccca08cf5af4e1e306ecf908b1ad5e)
 2. KFTT Data v1.0をアーカイブのまま取得します。SHA-256は `fcfcaa670d6d59aa691b0e909c0d7c393852dd2fb1d6310fda9b3282dc6d1638` です。[公式アーカイブ](https://www.phontron.com/kftt/download/kftt-data-1.0.tar.gz)

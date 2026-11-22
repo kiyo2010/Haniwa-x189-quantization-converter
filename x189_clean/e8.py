@@ -51,7 +51,7 @@ def take_panels(raw, first, stop, ncols):
     dtype = np.dtype([("scale", "<f2"), ("ids", "<u2", (ROWS, COLS // 8))])
     packs = np.frombuffer(raw, dtype=dtype, count=(stop - first)*ncols,
                           offset=first*ncols*PANEL_BYTES).reshape(stop-first, ncols)
-    if not np.isfinite(packs["scale"]).all() or np.any(packs["scale"] <= 0):
+    if not np.isfinite(packs["scale"]).all() or np.any(packs["scale"] < 0):
         raise ValueError("Invalid XE82 scale")
     return packs
 
@@ -120,10 +120,13 @@ class Tiles:
         u = self.tensor(su).reshape(1, nc, 1, COLS)
         v = self.tensor(sv).reshape(nr, 1, ROWS, 1)
         w = self.v @ (z * u * v) @ self.h
-        half = (w.square().mean(dim=(-2, -1)).sqrt() / 1.03).to(torch.float16)
-        if not torch.isfinite(half).all().item() or torch.any(half <= 0).item():
+        magnitude = w.square().mean(dim=(-2,-1)).sqrt()/1.03
+        half = magnitude.to(torch.float16)
+        half = torch.where((magnitude>0)&(half==0),torch.full_like(half,2**-24),half)
+        if not torch.isfinite(half).all().item():
             raise ValueError("XE82 tile scale outside FP16")
-        w = w / half[..., None, None]
+        divisor = torch.where(half==0,torch.ones_like(half),half)
+        w = w/divisor[...,None,None]
         out = torch.empty_like(w)
         indices = torch.empty((nr, nc, ROWS, COLS//8), dtype=torch.long, device=self.device)
         for b in reversed(range(0, COLS, 8)):

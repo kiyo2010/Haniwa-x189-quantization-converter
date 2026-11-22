@@ -181,12 +181,16 @@ def metadata(reader, cfg):
          reader.get_field("tokenizer.ggml.merges") is not None, "Original Qwen BPE vocabulary geometry")
 
 
-def _prefix(meta, rows):
+def _prefix(meta, rows, *, from_model=False):
     stop = max(f.offset + sum(x.nbytes for x in f.parts) for f in meta.fields.values())
     p = bytearray(meta.data[:stop])
-    need(0<=len(meta.data)-stop<ALIGNMENT and not meta.data[stop:].any() and
-         struct.unpack_from("<4sIQ", p) == (b"GGUF", 3, 0),
-         "Invalid vocab-only GGUF prefix")
+    count = len(meta.tensors) if from_model else 0
+    need(struct.unpack_from("<4sIQ",p)==(b"GGUF",3,count),"Invalid GGUF metadata prefix")
+    if from_model:
+        need(meta.alignment==ALIGNMENT and stop<=meta.data_offset and len(rows)==count,
+             "The source GGUF directory is incompatible")
+    else:
+        need(0<=len(meta.data)-stop<ALIGNMENT and not meta.data[stop:].any(),"Invalid vocabulary-only GGUF")
     struct.pack_into("<Q", p, 8, len(rows))
     pos = 0
     for r in rows:
@@ -253,6 +257,57 @@ def _verify(path, expected_meta, rows, prefix_bytes, size):
             pad = rounded(row["bytes"]) - row["bytes"]
             need(file.read(pad) == bytes(pad), f"Independent GGUF nonzero padding for {row['name']}")
         need(file.tell() == size and not file.read(1), "GGUF unaccounted trailer")
+
+
+def write_replacements(source, output, records):
+    """Write a full standard GGUF with an unchanged model's names, shapes and metadata."""
+    meta = gguf.GGUFReader(source,"r")
+    expected = {t.name:t for t in meta.tensors}
+    need(bool(records) and records.keys()<=expected.keys(),"Replacement tensor roster differs")
+    rows = []
+    for name,t in expected.items():
+        shape = tuple(int(x) for x in reversed(t.shape))
+        if name in records:
+            item = records[name]
+            path = item.path
+            kind = gguf.GGMLQuantizationType[item.kind]
+            block,nbytes = gguf.GGML_QUANT_SIZES[kind]
+            need(shape==item.shape and shape[-1]%block==0,"Replacement GGUF shape or block width changed")
+            count = math.prod(shape)//block*nbytes
+            need(path.stat().st_size==count and item.sha256 is not None,"Incomplete GGUF replacement")
+            offset, sha = 0, item.sha256
+        else:
+            path = source
+            kind, count, offset = t.tensor_type, int(t.n_bytes), int(t.data_offset)
+            sha = None
+        rows.append(dict(name=name,shape=shape,type=kind.name,ggml_type=int(kind),bytes=count,
+                         source=path,source_offset=offset,source_stamp=stamp(path.stat()),expected_sha256=sha))
+    header,extent = _prefix(meta,rows,from_model=True)
+    temp = tempfile.NamedTemporaryFile(dir=output.parent,prefix=".x189-model-",delete=False)
+    stage = Path(temp.name)
+    try:
+        with temp as dst:
+            dst.write(header)
+            for entry in rows:
+                with entry["source"].open("rb") as src:
+                    need(stamp(os.fstat(src.fileno()))==entry["source_stamp"],"Tensor input changed before publication")
+                    src.seek(entry["source_offset"])
+                    sha,crc = _stream(src,entry["bytes"],dst,check_f32=entry["type"]=="F32")
+                    need(stamp(os.fstat(src.fileno()))==entry["source_stamp"] and
+                         entry["expected_sha256"] in (None,sha),"Tensor input changed during publication")
+                entry.update(payload_sha256=sha,payload_crc32=crc)
+                dst.write(bytes(rounded(entry["bytes"])-entry["bytes"]))
+            dst.flush()
+            os.fsync(dst.fileno())
+            need(dst.tell()==len(header)+extent,"Final GGUF extent differs")
+        _verify(stage,meta,rows,len(header),len(header)+extent)
+        digest = sha_file(stage)
+        os.link(stage,output)
+    finally:
+        stage.unlink(missing_ok=True)
+    return dict(file=str(output),bytes=output.stat().st_size,sha256=digest,
+                architecture=field(meta,"general.architecture"),independently_verified_records=len(rows),
+                ggml_types=dict(Counter(r["type"] for r in rows)))
 
 
 def write(checkpoint: Path, llama_src: Path, work: Path, records: dict[str, Record], output: Path) -> dict:
