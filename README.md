@@ -79,6 +79,10 @@ CUDA_VISIBLE_DEVICES=0 python -m x189_clean \
 
 CUDAで推論する場合は同じリリースのCUDA版を使い、`-ngl 99` を指定します。[公式ランタイム](https://github.com/ggml-org/llama.cpp/releases/tag/b12487)
 
+## 動作確認
+
+[変換とCPU・GPUでの確認結果](VERIFICATION.md)
+
 ## ライセンス
 
 本リポジトリの配布ソースは [Apache License 2.0](LICENSE) です。外部入力と依存ライブラリにはそれぞれのライセンスが適用されます。[NOTICE](NOTICE)
