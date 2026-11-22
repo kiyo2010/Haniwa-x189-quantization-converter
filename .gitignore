@@ -8,3 +8,6 @@ __pycache__/
 *.native
 *.bin
 *.log
+
+.venv/
+/x189-work/
