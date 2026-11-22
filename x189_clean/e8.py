@@ -1,66 +1,12 @@
-"""Standalone X59 XE82 codec over QuIP# E8P, with bounded tensor streaming."""
-import ast
-from itertools import product
+# SPDX-License-Identifier: Apache-2.0
+"""Bounded tensor streaming for the eight-dimensional lattice codec."""
 import hashlib
-from pathlib import Path
 import struct
 import tempfile
 
 import numpy as np
 
-REFERENCE = Path(__file__).with_name("_vendor") / "E8P.py"
-P = np.array([0, 2, 4, 6, 1, 3, 5, 7])
-
-
-def source_function(name):
-    source = ast.parse(REFERENCE.read_text())
-    return next(node for node in source.body if isinstance(node, ast.FunctionDef) and node.name == name)
-
-
-def prototypes():
-    norm12 = ast.literal_eval(source_function("get_norm12").body[0].value.left.args[0])
-    grid = [a for a in product((1, 3, 5, 7), repeat=8) if sum(x*x for x in a) <= 40]
-    if len(grid) != 227 or len(norm12) != 29:
-        raise ValueError("Unexpected E8P prototype roster")
-    return np.array(grid + norm12, dtype=np.float32) / 2
-
-
-def table_for(codes, magnitudes):
-    codes = np.asarray(codes, dtype=np.uint16)
-    lower = (codes & 255)[..., None]
-    bits = (lower >> np.arange(8)) & 1
-    parity = bits.sum(axis=-1) % 2
-    bits[..., 0] ^= parity
-    values = magnitudes[codes >> 8]
-    bits[..., -1] ^= values.sum(axis=-1).astype(np.int32) % 2
-    return values * (1 - 2 * bits[..., np.argsort(P)]) + (0.25 - 0.5 * parity[..., None])
-
-
-def nearest(x, magnitudes, torch):
-    """Search 256 prototypes in both cosets with exact parity correction."""
-    def branch(parity):
-        y = x + (0.5 * parity - 0.25)
-        products = y.abs()[:, None, :] * magnitudes[None, :, :]
-        weakest, flip = products.min(dim=-1)
-        negative = y < 0
-        need_flip = (negative.sum(dim=-1)[:, None] + odd_prototype[None, :]) % 2
-        cost = y.square().sum(dim=-1)[:, None] + norm - 2 * products.sum(dim=-1)
-        distance, prototype = (cost + 4 * weakest * need_flip).min(dim=-1)
-        selected = torch.arange(x.shape[0], device=x.device)
-        signs = negative.clone()
-        signs[selected, flip[selected, prototype]] ^= need_flip[selected, prototype].bool()
-        ordered = signs[:, order].long()
-        ordered[:, 7] ^= odd_prototype[prototype]
-        ordered[:, 0] ^= parity
-        return distance, (prototype << 8) | (ordered << bit_shifts).sum(dim=-1)
-
-    norm = magnitudes.square().sum(dim=-1)
-    odd_prototype = magnitudes.sum(dim=-1).long() % 2
-    order = torch.as_tensor(P, device=x.device)
-    bit_shifts = torch.arange(8, device=x.device)
-    d0, c0 = branch(0)
-    d1, c1 = branch(1)
-    return torch.where(d1 < d0, c1, c0)
+from .lattice import nearest, prototypes, table_for
 
 
 def sylvester(size):
@@ -74,7 +20,7 @@ def sylvester(size):
 ROWS = 128
 COLS = 512
 HEAD = struct.Struct("<4sIIHH")
-MAGIC = b"XE82"
+MAGIC = b"E8Q2"
 RIDGE = .02
 PANEL_BYTES = 2 + ROWS * COLS // 4
 

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Portable X189-style quantization with public KFTT calibration."""
 
-RECIPE = "x189-public-kftt-v1"
+RECIPE = "X189-KFTT-v2"

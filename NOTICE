@@ -1,0 +1,30 @@
+X189-KFTT-v2
+
+The source distributed in this repository is licensed under the Apache
+License, Version 2.0. See LICENSE and https://www.apache.org/licenses/LICENSE-2.0.
+
+Independently obtained software dependencies
+--------------------------------------------
+NumPy is provided by the NumPy developers under the BSD 3-Clause license.
+https://numpy.org/doc/stable/license.html
+
+PyTorch is provided by its upstream project. See its license and bundled
+component notices for the terms of the installed distribution.
+https://github.com/pytorch/pytorch/blob/main/LICENSE
+
+llama.cpp and ggml are provided by ggml-org and their contributors under
+the MIT license. See the selected release for its dependency notices.
+https://github.com/ggml-org/llama.cpp/blob/8777c0c833effb3dec51f8db4f49f5c8b234c644/LICENSE
+
+Independently obtained model and corpus
+---------------------------------------
+Qwen3-1.7B is provided by Qwen under the Apache License, Version 2.0.
+Use and distribution of the source checkpoint or derived model remain
+subject to the applicable upstream terms.
+https://huggingface.co/Qwen/Qwen3-1.7B/tree/70d244cc86ccca08cf5af4e1e306ecf908b1ad5e
+
+KFTT Data v1.0 is distributed under CC BY-SA 3.0. Cite Graham Neubig,
+The Kyoto Free Translation Task (2011), and credit the Japanese-English
+Bilingual Corpus of Wikipedia's Kyoto Articles prepared by NICT.
+https://www.phontron.com/kftt?lang=en
+https://creativecommons.org/licenses/by-sa/3.0/

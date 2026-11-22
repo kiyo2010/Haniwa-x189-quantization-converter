@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Convert the official Qwen3-1.7B BF16 checkpoint to a stock X189-style GGUF."""
 import argparse
 from contextlib import ExitStack
@@ -44,7 +45,7 @@ def identity(args):
           all(calibration.stamp(Path(p)) == bound["stamps"][p] for p in files),
           "The authenticated BF16 checkpoint or KFTT input changed")
     source = Path(__file__).resolve().parent
-    modules = ("__main__.py","roles.py","e8.py","native.py","gguf_writer.py","_vendor/E8P.py")
+    modules = ("__init__.py","__main__.py","roles.py","e8.py","native.py","gguf_writer.py","lattice.py")
     return dict(calibration_sha256=calibration.digest(cap/"capture.json"),
                 sources={p:calibration.digest(source/p) for p in modules},
                 ggml_sha256=calibration.digest(args.ggml_lib), device=args.device,

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """X189-style physical type assignments; contains no calibrated statistics."""
 
 from collections import Counter

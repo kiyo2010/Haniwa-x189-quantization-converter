@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Public KFTT selection and bounded, resumable Qwen3 Gram capture."""
 from contextlib import ExitStack
 from collections import defaultdict
@@ -13,9 +14,10 @@ import tempfile
 
 import numpy as np
 
+from . import RECIPE
 from .roles import EMBEDDING, roles
 
-RECIPE = "X189-public-KFTT-v1"
+SELECTION_DOMAIN = "X189-public-KFTT-v1"
 ARCHIVE = "fcfcaa670d6d59aa691b0e909c0d7c393852dd2fb1d6310fda9b3282dc6d1638"
 SHARDS = {
     "model-00001-of-00002.safetensors": "169ad53ec313c3a34b06c0809216e4fc072cce444a5d4ff2b59690d064130ed5",
@@ -111,7 +113,7 @@ def corpus_pool(path, scratch):
                             need("en" in seen, "Unexpected KFTT member order")
                             for number, (a,b) in enumerate(zip(english,stream,strict=True),1):
                                 checksum.update(b)
-                                rank = int.from_bytes(hashlib.sha256(f"{RECIPE}|{number}".encode()).digest(), "big")
+                                rank = int.from_bytes(hashlib.sha256(f"{SELECTION_DOMAIN}|{number}".encode()).digest(), "big")
                                 if len(heap) == POOL and rank >= -heap[0][0]:
                                     continue
                                 en,ja = a.decode().strip(),b.decode().strip()

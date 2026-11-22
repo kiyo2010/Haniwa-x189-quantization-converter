@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Native IQ quantization and independent checks for the pinned ggml ABI."""
 import ctypes as c
 from pathlib import Path

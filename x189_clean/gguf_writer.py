@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Stream standalone X189-layout Qwen3 records into a stock GGUF v3 file."""
 from collections import Counter
 from dataclasses import dataclass
