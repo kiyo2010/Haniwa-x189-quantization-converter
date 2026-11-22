@@ -2,11 +2,13 @@
 
 **X189-public-KFTT-v1** は、公開KFTTの訓練対から校正データを選び、公式Qwen3-1.7BのBF16から全310テンソルを再計算します。X189の層ごとの型割当、XE82、語彙2,654行の残差、2つのrank-54補正を使います。標準GGUFではXE82と残差をFP32に展開し、76件を標準IQブロックに保存します。固定校正資料が異なるため、研究時のX189とは別レシピ・別の復元値になります。
 
+[新しい仮想環境での全工程・CPU・GPU検証](CLEAN-VERIFICATION.md)
+
 ## 必要な入力
 
 - 64-bit little-endian Linux、Python 3.12、NVIDIAドライバーとCUDA 12.8対応GPU。変換先に25 GB以上の空き容量を用意します。検証手順ではRTX 5090を一台割り当てます。
 - [公式Qwen3-1.7Bの固定スナップショット](https://huggingface.co/Qwen/Qwen3-1.7B/tree/70d244cc86ccca08cf5af4e1e306ecf908b1ad5e)。2つのsafetensors、safetensors index、config、tokenizer、tokenizer_configが必須です。
-- 公式KFTT 1.0の元アーカイブ。SHA-256は `fcfcaa670d6d59aa691b0e909c0d7c393852dd2fb1d6310fda9b3282dc6d1638` です。[配布元](https://www.phontron.com/kftt?lang=en)
+- 公式KFTT 1.0の元アーカイブ。SHA-256は `fcfcaa670d6d59aa691b0e909c0d7c393852dd2fb1d6310fda9b3282dc6d1638` です。[配布元](https://www.phontron.com/kftt?lang=en)・[アーカイブ](https://www.phontron.com/kftt/download/kftt-data-1.0.tar.gz)
 - [無改造llama.cpp b12487](https://github.com/ggml-org/llama.cpp/releases/tag/b12487) の[ソースアーカイブ](https://github.com/ggml-org/llama.cpp/archive/8777c0c833effb3dec51f8db4f49f5c8b234c644.tar.gz)と[Ubuntu x64 CPU版](https://github.com/ggml-org/llama.cpp/releases/download/b12487/llama-b12487-bin-ubuntu-x64.tar.gz)。ソース側は `convert_hf_to_gguf.py` と `gguf-py`、CPU版は `libggml-base.so` と読み戻しツールを使います。実行時に両方の依存を指定します。
 
 ソースアーカイブのSHA-256は `a5ea74766fa1ec3ed1341fe6f13c47a242c9b247fc5e6a858d06938aa6dad55b`、CPU版アーカイブのSHA-256は `43a5be706de133d9193b3be7eaaf4123c7e79007e4aac78a2a99c95ece9e2c5b` です。
@@ -20,6 +22,16 @@ python3.12 -m venv .venv
 .venv/bin/python -m pip install --resume-retries 30 \
   --index-url https://download.pytorch.org/whl/cu128 \
   --extra-index-url https://pypi.org/simple -r requirements-standalone.txt
+```
+
+元BF16を取得する場合は、同じ仮想環境の `hf` が使えます。
+
+```sh
+.venv/bin/hf download Qwen/Qwen3-1.7B \
+  --revision 70d244cc86ccca08cf5af4e1e306ecf908b1ad5e \
+  config.json generation_config.json tokenizer.json tokenizer_config.json \
+  model.safetensors.index.json model-00001-of-00002.safetensors \
+  model-00002-of-00002.safetensors --local-dir "$BF16"
 ```
 
 `BF16` は元スナップショット、`KFTT` は元アーカイブ、`LLAMA_SRC` はソース展開先、`LLAMA_CPU` はCPU版の実行ファイルと共有ライブラリのあるディレクトリの絶対パスです。 `WORK` と `OUTPUT` は空の専用作業先と、別名の新しい出力先です。出力先の親ディレクトリを用意します。
