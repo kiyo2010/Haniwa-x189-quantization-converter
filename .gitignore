@@ -1,0 +1,10 @@
+/work/
+/private-x189-from-bf16/work/
+__pycache__/
+*.gguf
+*.qpack
+*.safetensors
+*.npz
+*.native
+*.bin
+*.log
