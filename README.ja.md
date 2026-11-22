@@ -23,6 +23,18 @@ curl -fLsS https://github.com/ggml-org/llama.cpp/releases/download/b12487/llama-
   | tar -xz --strip-components=1 -C vendor/llama-bin
 ```
 
+**アップデート**
+
+インストール済みなら、端末で下のコマンドを実行します。別の場所に入れた場合は、最初の行をそのフォルダに変えてください。
+
+```sh
+cd "$HOME/x189-quantization-converter"
+git pull --ff-only
+. .venv/bin/activate
+python -m pip install --index-url https://download.pytorch.org/whl/cu128 \
+  --extra-index-url https://pypi.org/simple -r requirements.txt -r requirements-gui.txt
+```
+
 ## コマンド実行方法
 
 **GUIを開く（端末で実行）**

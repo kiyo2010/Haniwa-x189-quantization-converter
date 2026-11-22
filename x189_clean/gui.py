@@ -187,14 +187,10 @@ class Window(QWidget):
         button.setAccessibleName(f"{name}を選択")
         button.clicked.connect(pick)
         layout.addWidget(QLabel(name, buddy=field), row, 0)
-        layout.addWidget(field, row, 1)
-        if extra_control is None:
-            layout.addWidget(button, row, 2, Qt.AlignmentFlag.AlignRight)
-        else:
-            buttons = QHBoxLayout()
-            buttons.addWidget(extra_control)
-            buttons.addWidget(button)
-            layout.addLayout(buttons, row, 2)
+        layout.addWidget(field, row, 1, 1, 2 if extra_control is None else 1)
+        if extra_control is not None:
+            layout.addWidget(extra_control, row, 2)
+        layout.addWidget(button, row, 3, Qt.AlignmentFlag.AlignRight)
         layout.setColumnStretch(1, 1)
         return field
 
