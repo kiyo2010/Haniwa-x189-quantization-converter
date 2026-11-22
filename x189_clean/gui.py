@@ -28,6 +28,11 @@ except ModuleNotFoundError as exc:
 
 
 TENSOR_PROGRESS = re.compile(r"^\[(\d+)/(\d+)\] (?:E8|IQ4_NL) ", re.M)
+CALIBRATION_DIR = Path(__file__).resolve().parent / "data"
+CALIBRATION_PRESETS = (
+    ("汎用校正テキスト", "calibration-general.txt"),
+    ("日英サンプル", "calibration-ja-en.txt"),
+)
 STYLES = """
 QWidget#window { background: #f2f5fa; color: #15243a; }
 QLabel { color: #15243a; }
@@ -94,7 +99,23 @@ class Window(QWidget):
         paths = QGridLayout(self.inputs)
         paths.setContentsMargins(16, 16, 16, 16)
         self.checkpoint = self.path_row(paths, 0, "BF16モデル", "モデルのフォルダ", self.pick_checkpoint)
-        self.calibration = self.path_row(paths, 1, "校正テキスト", "UTF-8のテキストファイル", self.pick_calibration)
+        self.calibration_preset = QComboBox()
+        self.calibration_preset.setAccessibleName("校正テキストのサンプル")
+        self.calibration_preset.setPlaceholderText("同梱サンプル")
+        for label, filename in CALIBRATION_PRESETS:
+            sample = CALIBRATION_DIR / filename
+            if sample.is_file():
+                self.calibration_preset.addItem(label, str(sample))
+        self.calibration = self.path_row(paths, 1, "校正テキスト", "UTF-8のテキストファイル",
+                                         self.pick_calibration, extra_control=self.calibration_preset)
+        self.calibration_preset.activated.connect(
+            lambda index: self.calibration.setText(self.calibration_preset.itemData(index)))
+        self.calibration.textChanged.connect(
+            lambda path: self.calibration_preset.setCurrentIndex(self.calibration_preset.findData(path)))
+        if self.calibration_preset.count():
+            self.calibration.setText(self.calibration_preset.itemData(0))
+        else:
+            self.calibration_preset.hide()
         self.output = self.path_row(paths, 2, "GGUFの保存先", "新しい .gguf ファイル", self.pick_output)
         layout.addWidget(self.inputs)
 
@@ -116,7 +137,7 @@ class Window(QWidget):
         conversion.setObjectName("run")
         run = QVBoxLayout(conversion)
         run.setContentsMargins(16, 14, 16, 12)
-        self.status = QLabel("モデル、校正テキスト、保存先を選択してください。")
+        self.status = QLabel("BF16モデルとGGUFの保存先を選択してください。")
         self.status.setWordWrap(True)
         self.status.setTextFormat(Qt.TextFormat.PlainText)
         self.progress = QProgressBar()
@@ -160,14 +181,20 @@ class Window(QWidget):
             os.environ.get("LLAMA_CPU", str(Path(binary).resolve().parent) if binary else ""), str))
         self.device.setCurrentIndex(max(0, self.device.findData(self.settings.value("device", "cpu", str))))
 
-    def path_row(self, layout, row, name, placeholder, pick):
+    def path_row(self, layout, row, name, placeholder, pick, *, extra_control=None):
         field = QLineEdit(placeholderText=placeholder)
         button = QPushButton("選択…")
         button.setAccessibleName(f"{name}を選択")
         button.clicked.connect(pick)
         layout.addWidget(QLabel(name, buddy=field), row, 0)
         layout.addWidget(field, row, 1)
-        layout.addWidget(button, row, 2)
+        if extra_control is None:
+            layout.addWidget(button, row, 2, Qt.AlignmentFlag.AlignRight)
+        else:
+            buttons = QHBoxLayout()
+            buttons.addWidget(extra_control)
+            buttons.addWidget(button)
+            layout.addLayout(buttons, row, 2)
         layout.setColumnStretch(1, 1)
         return field
 

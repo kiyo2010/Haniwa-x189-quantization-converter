@@ -34,18 +34,18 @@ LLAMA_SRC="$PWD/vendor/llama-source" LLAMA_CPU="$PWD/vendor/llama-bin" \
   python -m x189_clean gui
 ```
 
-開いた画面でBF16モデルのフォルダ、校正用のUTF-8テキスト、GGUFの保存先を選び、**変換を開始**を押します。
+開いた画面でBF16モデルのフォルダとGGUFの保存先を選び、**変換を開始**を押します。校正には同梱の **汎用校正テキスト**（16言語）が使われます。同じ欄で **日英サンプル** に切り替えたり、**選択…** から自分のUTF-8テキストを指定したりできます。
 
 **端末だけで変換する**
 
-下の `$HOME/models/my-model` と `$HOME/calibration.txt` を自分のモデルフォルダと校正ファイルの場所に書き換え、端末で実行します。出力はホームフォルダの `haniwa-x189.gguf` です。
+下の `$HOME/models/my-model` を自分のモデルフォルダに書き換え、端末で実行します。出力はホームフォルダの `haniwa-x189.gguf` です。
 
 ```sh
 cd "$HOME/x189-quantization-converter"
 . .venv/bin/activate
 python -m x189_clean convert \
   --checkpoint "$HOME/models/my-model" \
-  --calibration-text "$HOME/calibration.txt" \
+  --calibration-text "x189_clean/data/calibration-general.txt" \
   --llama-source "vendor/llama-source" \
   --llama-imatrix "vendor/llama-bin/llama-imatrix" \
   --ggml-lib "vendor/llama-bin/libggml-base.so" \

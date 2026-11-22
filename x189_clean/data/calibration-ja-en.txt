@@ -1,0 +1,69 @@
+朝の散歩に出る前に、机の上の小さなノートを開いた。きのう聞いた鳥の声が気になって、時刻と場所を思い出せるうちに書き留めた。鳥の名前は分からなかったが、川にかかる橋の近くで何度も同じ声がした。明日は少し早く出て、同じ場所で待ってみることにした。
+
+Before leaving for her morning walk, Mina opened the small notebook on the desk. She wrote down the time and place where she had heard an unfamiliar bird the day before. She could not identify it, but the same call had sounded several times near the bridge over the river. Tomorrow she planned to leave a little earlier and wait at the same spot. Her note contained a date, a simple map, and a description of the sound.
+
+問い合わせ：注文した本が二冊のうち一冊だけ届きました。もう一冊はいつ届きますか。
+返答：ご連絡ありがとうございます。ご注文の二冊は別々の荷物で発送されています。注文履歴を開くと、商品ごとに配送状況を確認できます。二冊目の追跡番号をお知らせいただければ、表示の内容を一緒に確認します。到着予定日を過ぎても届かない場合は、改めてご連絡ください。
+
+Customer: I received one of the two books I ordered. When will the other one arrive?
+Reply: Thank you for getting in touch. The two books were shipped in separate packages. You can find the delivery status for each item in your order history. If you send the tracking number for the second book, we can help you read the latest update. Please contact us again if the package has still not arrived after the estimated delivery date.
+
+夕方から雨になるという予報を見て、野外で予定していた読書会の会場を変えた。開始時刻はそのままにして、駅から歩いて行ける公民館を予約した。案内には建物の名前だけでなく、入口が広場に面していることも書いた。遅れそうな人には、開始後も途中から参加できると伝えた。
+
+The forecast called for rain in the evening, so the reading group moved its outdoor meeting indoors. The organizer kept the original start time and booked a room at a community center within walking distance of the station. Her message included the building name and mentioned that the entrance faced the square. People who expected to arrive late were told that they could still join once the discussion had begun.
+
+質問：月曜日に18件、火曜日に24件の申し込みがありました。二日間の合計と、火曜日に何件増えたかを求めてください。
+回答：合計は18と24を足して42件です。火曜日の増加分は24から18を引いて6件です。報告書には日ごとの件数と合計を分けて書くと、読み手が元の数字を確認しやすくなります。
+
+Question: There were 18 applications on Monday and 24 on Tuesday. What was the total, and how many more arrived on Tuesday?
+Answer: Add 18 and 24 to get 42 applications. Subtract 18 from 24 to find the increase of 6. For a short report, put the counts for the two days on separate lines and show the total below them. That layout lets the reader check the result against the original numbers.
+
+部屋を整理するため、まず棚の上に何があるかを紙に書き出した。よく使う道具は手前に置き、季節が変わるまで使わないものは箱にまとめた。箱の外に中身を書いておけば、後で必要になったときにすぐ見つけられる。内容が決まっていない箱には、いったん「あとで確認」と書いておいた。
+
+To organize the room, Ken first wrote down what was on each shelf. He moved the tools he used every week to the front and put seasonal items in boxes. A short description on the outside of each box made it easier to find things later. One box contained papers he had not sorted yet, so he marked it for review. Having a rough list helped him continue the next day without starting over.
+
+質問：CSVの空行を読み飛ばしながら、最初の列だけを追加で集計したいです。どう処理すればよいですか。
+回答：Pythonの標準ライブラリのcsv.readerで一行ずつ読み、要素が空の行を飛ばします。最初の列をstrip()で整えてから辞書のキーにすると、余分な空白で同じ値が別々に集計されるのを防げます。見出しがある場合は、集計前に一行読み飛ばします。
+
+Question: How can I count values in the first column of a CSV file while skipping blank rows?
+Answer: Read the file with Python's csv.reader. Skip a row if it has no fields. For each remaining row, strip surrounding whitespace from the first field and use the result as a key in a dictionary or Counter. If the file has a header, consume it before counting the data. A tiny example file with one repeated value is enough to check the basic behavior.
+
+昼食に野菜入りのスープを作った。最初に玉ねぎを細かく切り、弱火で透明になるまで炒めた。あとから残っていたにんじんとじゃがいもを加え、水を注いで柔らかくなるまで煮た。味をつける前に一度かき混ぜて、少しだけ味見をした。明日も食べられるように、余った分は冷まして容器に分けた。
+
+For lunch, Lea made a vegetable soup. She diced an onion and cooked it over low heat until it softened. Then she added carrots and potatoes, poured in some water, and let the vegetables simmer. She stirred the soup and tasted a spoonful before adding the seasoning. The recipe was simple enough to adapt to what she had in the cupboard. She made enough for a second meal and set a portion aside.
+
+美術館の受付で、展示室を回る順番を聞いた。係員は最初に二階へ行き、階段を降りながら一階の作品を見ると空いていると教えてくれた。入口でもらった案内図には、静かに休める椅子の場所も載っていた。すべてを急いで見るより、気になった作品に時間を使うことにした。
+
+At the museum reception desk, we asked which rooms to visit first. The attendant suggested starting upstairs, then looking at the ground-floor exhibits on the way back down. The map showed a bench in a quieter corner of the building. We decided to spend more time with the pieces we liked instead of rushing to see every room. Before leaving, we each wrote down the title of one work we wanted to remember.
+
+当番表を共有するときは、用件を短い見出しにして、変更した行がどれか分かるようにした。返信が必要な人には、確認してほしい日付を一つずつ書いた。確認が不要な人には、知らせるだけの連絡だと伝えた。表を見られない場合に備えて、本文にも次回の時刻を書いておいた。
+
+For the volunteer rota, Jade used a short subject line and marked the rows that had changed. She named the dates that needed a reply and gave everyone else the update for information. She also wrote the next meeting time in the message itself so that people could read it without opening the attachment. At the end she included a single point of contact for anyone who needed to swap a shift.
+
+窓際で育てている三つの鉢を比べると、小さな鉢だけ土が早く乾いていました。同じ日に水をやっても違いが出たので、鉢の大きさと置き場所を記録しました。次の週は置き場所を入れ替え、土の乾き方が変わるかを見ます。観察が終わるまで、札には植物の名前と日付を書いて残しておきます。
+
+Three plant pots had been sitting by the same window. The smallest one dried out first, even though all three had been watered on the same day. Luis recorded the sizes of the pots and where they stood. The following week he would exchange their positions and see whether the pattern changed. Each pot had a label with the plant's name and the date so he could connect his observations to the right one.
+
+駅前の工事で、いつも使う道が通れなくなった。交差点の地図を見ると、一本奥の通りから広場へ行けることが分かった。遠回りではあったが、途中で新しいパン屋を見つけた。初めて通る人のために、角を曲がる場所と広場までの歩く時間をメモしておいた。
+
+Roadworks blocked the usual path from the station. A map at the crossing showed that a parallel street still led to the square. It took a little longer, but we passed a bakery we had never noticed before. For friends who would arrive later, I wrote down the name of the street and the corner where they should turn. I also included how long the walk had taken at an ordinary pace.
+
+紙に描いた計画では、棚板を三段に分けることになっていた。実際に本の高さを測ってみると、一番下だけ少し広く取る必要があった。設計の数字を修正するときは、古い数字を消す前に変更の理由もメモした。次に同じ寸法を確認する人が、図面から判断できるようにするためだ。
+
+The first sketch divided the bookcase into three equal shelves. After measuring the books, we realized that the bottom shelf needed a little more space. Before replacing the old measurement, we wrote a note explaining the change. The note meant the next person could understand the drawing without repeating the checks. Later we compared the new sketch with the longest books laid out on the floor.
+
+録音を聞き返すと、声が小さく聞こえる箇所がありました。周りの音も同じように大きかったので、聞き取りにくかった部分だけを何度か再生しました。聞こえない名前は推測で書き足さず、あとで本人に確認するために時刻を記録しました。作業を終えたら、要点と確認待ちの項目を別々にまとめました。
+
+While reviewing a recording, Nia found a section where the speaker was hard to hear. The background noise was also louder, so she replayed just that part a few times. Instead of guessing an unclear name, she marked the time and made a note to ask the speaker. She organized the summary into points she could confirm and details she still needed to check. This made the draft easy to review.
+
+友人から短い物語を受け取った。舞台は雪が降った翌朝の商店街で、まだ誰も歩いていない道に足跡が一つだけ残っている。主人公は足跡の先をたどるうちに、開店前の小さな喫茶店を見つける。店の窓には、昨日の夜にはなかった手書きの看板が掛かっていた。
+
+A friend sent me a short story set on a shopping street the morning after a snowfall. A single set of footprints crossed the path before the shops opened. The main character followed the tracks to a small café and noticed a handwritten sign in the window. The last line stopped before we learned what the sign said. I wanted to know what had brought the first visitor there so early.
+
+気づいたことを共有するなら、まず観察した内容を書き、考えられる理由は次の段落に分けると伝わりやすくなります。たとえば「窓を開けたら室温が下がった」は観察です。「外の空気が冷たかったからだろう」は理由の候補です。同じことをもう一度試す場合は、時刻や測った場所も残しておくと比較できます。
+
+When sharing an observation, write down what you saw before explaining why you think it happened. For example, “the room became cooler after I opened the window” describes an observation. “The outdoor air may have been colder” proposes an explanation. Leaving a record of the time and the place of the measurement makes it possible to compare the result with another day. A separate line for questions can also help the next person build on the note.
+
+計画の締め切りが重なったので、今週の作業を二つに分けた。先に必要なことだけを選び、途中の成果を見せられる日を決めた。必要な情報が届かなかった場合には、すでに分かっている範囲をまとめ、残りは確認してから追加する。予定が変わるときは、理由と次の確認日を関係者に伝えることにした。
+
+Several deadlines fell in the same week, so the team divided its work into two parts. They chose the tasks needed for the next review and agreed on a day to show an early draft. If a detail arrived late, they would finish the sections whose facts had been confirmed and add the remaining information afterward. Any change to the schedule would include a short reason and the date of the next check.
