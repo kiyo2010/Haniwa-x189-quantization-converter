@@ -11,4 +11,4 @@ Both files passed tensor readback and contained `Haniwa X189` in `x189.recipe`. 
 
 The GUI was tested with file dialogs, a Japanese output filename containing spaces, cancellation and retry, and an existing destination file. The CLI architecture listing was checked for Llama, Qwen2, and Mixtral.
 
-[Conversion instructions](README.en.md) · [llama.cpp b12487](https://github.com/ggml-org/llama.cpp/releases/tag/b12487)
+[Conversion instructions](README.md#english) · [llama.cpp b12487](https://github.com/ggml-org/llama.cpp/releases/tag/b12487)
