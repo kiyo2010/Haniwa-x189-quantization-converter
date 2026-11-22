@@ -1,4 +1,4 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Portable X189-style quantization with public KFTT calibration."""
+"""Haniwa X189 quantization for BF16 models and standard GGUF output."""
 
-RECIPE = "X189-KFTT-v2"
+RECIPE = "Haniwa X189"

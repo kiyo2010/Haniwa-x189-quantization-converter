@@ -16,12 +16,11 @@ import time
 
 import numpy as np
 
-from . import calibration
+from . import RECIPE
 from . import portable
 from .e8 import COLS, ROWS, Encoder, _int8_rows, _weighted_fit, apply_vocabulary, vocabulary_rank
 from .native import NativeIQ
 
-RECIPE = "X189-Generic-v1"
 ROUTING = ("ffn_gate_inp", "router", "expert_score")
 KEY_VALUE = ("attn_k.weight", "attn_v.weight")
 EXPERT_IQ = ("ffn_gate_exps.weight", "ffn_up_exps.weight")
@@ -266,13 +265,13 @@ def run(args):
             methods=dict(Counter(r["method"] for r in results.values())),
             preserved_tensors=len(source.tensors)-len(results),lattice_bytes_before_gguf_expansion=lattice_bytes,
             tensor_results=results)
-        calibration.atomic_json(work/(output.name+".x189.json"),report)
+        portable.atomic_json(work/(output.name+".x189.json"),report)
         print(json.dumps({k:v for k,v in report.items() if k!="tensor_results"},ensure_ascii=False),flush=True)
 
 
 def cli(action,argv):
     p = argparse.ArgumentParser(prog=f"python -m x189_clean {action}",
-        description="Quantize a local HF BF16 checkpoint with X189 and produce a standard GGUF"
+        description="Quantize a local HF BF16 checkpoint with Haniwa X189 and produce a standard GGUF"
         if action=="convert" else "List the model architectures registered by llama.cpp")
     p.add_argument("--llama-source",type=Path,required=True)
     if action=="convert":

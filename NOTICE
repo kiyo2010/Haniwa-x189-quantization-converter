@@ -1,4 +1,4 @@
-X189 BF16 to GGUF
+Haniwa X189
 
 The source distributed in this repository is licensed under the Apache
 License, Version 2.0. See LICENSE and https://www.apache.org/licenses/LICENSE-2.0.
@@ -19,16 +19,3 @@ https://github.com/ggml-org/llama.cpp/blob/8777c0c833effb3dec51f8db4f49f5c8b234c
 PySide6 Essentials and Shiboken6 are provided by the Qt for Python project.
 See the upstream project for the LGPLv3, GPLv3, and commercial license options.
 https://doc.qt.io/qtforpython-6/
-
-Independently obtained model and corpus
----------------------------------------
-Qwen3-1.7B is provided by Qwen under the Apache License, Version 2.0.
-Use and distribution of the source checkpoint or derived model remain
-subject to the applicable upstream terms.
-https://huggingface.co/Qwen/Qwen3-1.7B/tree/70d244cc86ccca08cf5af4e1e306ecf908b1ad5e
-
-KFTT Data v1.0 is distributed under CC BY-SA 3.0. Cite Graham Neubig,
-The Kyoto Free Translation Task (2011), and credit the Japanese-English
-Bilingual Corpus of Wikipedia's Kyoto Articles prepared by NICT.
-https://www.phontron.com/kftt?lang=en
-https://creativecommons.org/licenses/by-sa/3.0/

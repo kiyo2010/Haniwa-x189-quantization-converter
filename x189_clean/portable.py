@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import tempfile
 
 
 RUN_CONVERTER = """
@@ -37,6 +38,21 @@ def read_object(path):
     value = json.loads(path.read_text(encoding="utf-8"))
     require(isinstance(value, dict), f"Expected a JSON object in {path.name}")
     return value
+
+
+def atomic_json(path, value):
+    stream = tempfile.NamedTemporaryFile(dir=path.parent, prefix=".x189-report-",
+                                         mode="w", encoding="utf-8", delete=False)
+    pending = Path(stream.name)
+    try:
+        with stream:
+            json.dump(value, stream, sort_keys=True, allow_nan=False)
+            stream.write("\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(pending, path)
+    finally:
+        pending.unlink(missing_ok=True)
 
 
 def stamp(path):

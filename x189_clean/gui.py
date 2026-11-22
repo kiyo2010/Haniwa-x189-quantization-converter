@@ -11,6 +11,8 @@ import signal
 import sys
 from tempfile import TemporaryDirectory
 
+from . import RECIPE
+
 try:
     from PySide6.QtCore import QProcess, QProcessEnvironment, QSettings, Qt, QUrl
     from PySide6.QtGui import QDesktopServices
@@ -25,7 +27,6 @@ except ModuleNotFoundError as exc:
     raise SystemExit("GUI requires PySide6-Essentials: python -m pip install -r requirements-gui.txt") from None
 
 
-RECIPE = "X189-Generic-v1"
 TENSOR_PROGRESS = re.compile(r"^\[(\d+)/(\d+)\] (?:E8|IQ4_NL) ", re.M)
 STYLES = """
 QWidget#window { background: #f2f5fa; color: #15243a; }
@@ -60,7 +61,7 @@ class Window(QWidget):
     def __init__(self):
         super().__init__()
         self.setObjectName("window")
-        self.setWindowTitle("X189 BF16 → GGUF")
+        self.setWindowTitle(RECIPE)
         self.resize(800, 580)
         self.setMinimumWidth(640)
         self.settings = QSettings("X189", "Converter")
@@ -80,9 +81,9 @@ class Window(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(24, 22, 24, 22)
         layout.setSpacing(14)
-        title = QLabel("X189 BF16 → GGUF")
+        title = QLabel(RECIPE)
         title.setObjectName("title")
-        subtitle = QLabel("Hugging FaceのBF16モデルをX189で量子化し、標準GGUFに保存します。")
+        subtitle = QLabel("Hugging FaceのBF16モデルを量子化し、標準GGUFに保存します。")
         subtitle.setObjectName("subtitle")
         subtitle.setWordWrap(True)
         layout.addWidget(title)
@@ -180,7 +181,7 @@ class Window(QWidget):
         chosen = self.pick_folder(self.checkpoint, "BF16モデルのフォルダ")
         if chosen and not self.output.text():
             model = Path(chosen)
-            self.output.setText(str(model.parent / f"{model.name}-x189.gguf"))
+            self.output.setText(str(model.parent / f"{model.name}-haniwa-x189.gguf"))
 
     def pick_calibration(self):
         chosen, _ = QFileDialog.getOpenFileName(self, "校正テキスト", self.calibration.text() or str(Path.home()),
@@ -281,7 +282,7 @@ class Window(QWidget):
             if done < total:
                 self.progress.setRange(0, total)
                 self.progress.setValue(done)
-                self.status.setText(f"X189で量子化中（{done} / {total} テンソル）")
+                self.status.setText(f"Haniwa X189で量子化中（{done} / {total} テンソル）")
             else:
                 self.progress.setRange(0, 0)
                 self.status.setText("GGUFを書き出し、読み戻して検証中…")
@@ -316,7 +317,7 @@ class Window(QWidget):
                 report = json.loads(report_path.read_text(encoding="utf-8"))
                 size = self.staged_output.stat().st_size
                 if not isinstance(report, dict) or report.get("recipe") != RECIPE or report.get("bytes") != size:
-                    raise ValueError("X189の変換結果を確認できませんでした。")
+                    raise ValueError("Haniwa X189の変換結果を確認できませんでした。")
                 os.link(self.staged_output, self.destination)
                 message = f"変換完了  ·  {self.destination.name}（{size:,} B）"
                 success = True
@@ -353,7 +354,7 @@ class Window(QWidget):
 
 
 def main(argv):
-    parser = argparse.ArgumentParser(prog="python -m x189_clean gui", description="X189 desktop converter")
+    parser = argparse.ArgumentParser(prog="python -m x189_clean gui", description="Haniwa X189 desktop converter")
     parser.parse_args(argv)
     app = QApplication([sys.argv[0]])
     app.setStyle("Fusion")

@@ -2,7 +2,6 @@
 """Bounded tensor streaming for the eight-dimensional lattice codec."""
 import hashlib
 import struct
-import tempfile
 
 import numpy as np
 
@@ -157,11 +156,6 @@ class Tiles:
 AXES_SEED = "X30-XE82/axes/v1"
 SLAB_TILES = 8
 MAX_FLAT_HOST = 524 * (1 << 20)
-EMBEDDING = "model.embed_tokens.weight"
-RANK54_NAMES = {
-    "model.layers.0.self_attn.q_proj.weight",
-    "model.layers.20.self_attn.q_proj.weight",
-}
 
 
 def signs(name, shape):
@@ -292,46 +286,6 @@ class Encoder:
         return dict(shape=[rows,cols],bytes=size(rows,cols),sha256=native.hexdigest(),
                     fp32_sha256=reconstructed.hexdigest())
 
-    def restore(self, name, weight, gram, frequencies=None, *, out=None):
-        """Encode then cold-decode raw XE82, optionally applying X72 when requested."""
-        shape=weight.shape
-        geometry(*shape)
-        if out is None:
-            if np.prod(shape,dtype=np.int64)*4>MAX_FLAT_HOST:
-                raise ValueError("Supply a file-backed FP32 output for this large tensor")
-            out=np.empty(shape,np.float32)
-        if out.shape!=shape or out.dtype!=np.float32 or not out.flags.writeable:
-            raise ValueError("XE82 output must be writable FP32 with matching shape")
-        if out.nbytes>MAX_FLAT_HOST and not isinstance(out,np.memmap):
-            raise ValueError("Output beyond 524 MiB must be an explicit NumPy memmap")
-        if frequencies is not None and (name!=EMBEDDING or np.may_share_memory(weight,out)):
-            raise ValueError("Frequency correction requires original and output as separate embedding arrays")
-        source=lambda first,stop:weight[first:stop]
-        with tempfile.TemporaryFile() as storage:
-            encoded=self.encode(name,shape,source,storage,gram)
-            storage.seek(0)
-            proof=self.decode(storage,out.__setitem__,shape)
-            if encoded["sha256"]!=proof["sha256"]:
-                raise ValueError("Independent XE82 readback differs")
-        if frequencies is not None:
-            corrected=vocabulary_rank(source,out,frequencies)
-            apply_vocabulary(corrected,source,out)
-        return out
-
-    def apply_vocab_residual(self,original_reader,decoded_rw_memmap,frequencies):
-        """Correct the tied vocabulary in place, returning sorted selected IDs."""
-        return apply_vocab_residual(original_reader,decoded_rw_memmap,frequencies)
-
-    def apply_query_factor(self,name,original_reader,decoded_rw_memmap,gram):
-        """Correct this Q projection in place and return canonical raw factor bytes."""
-        if name not in RANK54_NAMES or decoded_rw_memmap.shape!=(2048,2048):
-            raise ValueError("X148 only covers its two pinned Q projections")
-        source=_f32(original_reader(0,2048))
-        payload=rank54_factors(self,name,source,decoded_rw_memmap,gram)
-        apply_rank54(self,decoded_rw_memmap,payload)
-        return payload
-
-
 def _weighted_fit(residual,gram,rank,name,torch):
     # X148 uses original-coordinate ridge, unlike XE82's rotated ridge.
     rows,cols=residual.shape
@@ -382,53 +336,8 @@ def _int8_rows(values,*,factor=False):
     return scale,codes
 
 
-def rank54_factors(encoder,name,weight,base,gram):
-    """Fit X148 on its two declared Q projections; return X83 plain factor bytes."""
-    if name not in RANK54_NAMES or weight.shape!=base.shape or base.shape!=(2048,2048):
-        raise ValueError("X148 rank-54 recipe is only for the two fixed 2048x2048 Q records")
-    t=encoder.torch
-    with t.inference_mode():
-        original=t.from_numpy(_f32(weight)).to(encoder.device)
-        current=t.from_numpy(_f32(base)).to(encoder.device)
-        left,right=_weighted_fit(original-current,gram,54,name,t)
-        rs,ri=_int8_rows(right.cpu().numpy(),factor=True)
-        ls,li=_int8_rows(left.cpu().numpy(),factor=True)
-    return rs.tobytes()+ri.tobytes()+ls.tobytes()+li.tobytes()
-
-
-def apply_rank54(encoder,base,record):
-    """Apply already quantized rank-54 factors in canonical FP32."""
-    if base.shape!=(2048,2048) or base.dtype!=np.float32 or len(record)!=225388:
-        raise ValueError("X148 raw rank factor dimension or length differs")
-    t=encoder.torch
-    rank,rows,cols=54,*base.shape
-    p=0
-    fields=[]
-    for shape,dtype in (((rank,),"<f2"),((rank,cols),"i1"),((rows,),"<f2"),((rows,rank),"i1")):
-        dt=np.dtype(dtype)
-        count=int(np.prod(shape))
-        fields.append(np.frombuffer(record,dtype=dt,count=count,offset=p).reshape(shape).astype(np.float32))
-        p+=count*dt.itemsize
-    rs,ri,ls,li=fields
-    if not np.isfinite(rs).all() or not np.isfinite(ls).all() or (rs<=0).any() or (ls<=0).any():
-        raise ValueError("X148 factor scale invalid")
-    with t.inference_mode():
-        coeff=t.from_numpy(li*ls[:,None]).to(encoder.device)
-        basis=t.from_numpy(ri*rs[:,None]).to(encoder.device)
-        for first in range(0,rows,ROWS):
-            stop=first+ROWS
-            residual=coeff[first:stop]@basis
-            base[first:stop]=(t.from_numpy(base[first:stop]).to(encoder.device)+residual).cpu().numpy()
-    return base
-
-
 def vocabulary_rank(read,base,frequencies,k=2654,reserved=()):
-    """Select rows by X72 true requantized SSE reduction, times train frequency.
-
-    Supply frequencies from the exact KFTT calibration input IDs. For the
-    X72 frequency arm leave reserved empty. The template arm can instead
-    supply its explicitly frozen reserved token IDs.
-    """
+    """Select rows by quantized residual improvement weighted by calibration frequency."""
     freq=np.asarray(frequencies)
     reserved=np.asarray(reserved,dtype=np.int64)
     rows,cols=base.shape
@@ -482,21 +391,3 @@ def apply_vocabulary(ids,read,base,write=None):
                 raise OSError("Short X72 coefficient write")
         base[local]=old+codes.astype(np.float32)*scale.astype(np.float32)[:,None]
     return base
-
-
-
-def apply_vocab_residual(original_reader,decoded_rw_memmap,frequencies):
-    """Apply the X72 frequency arm to a real decoded Qwen embedding in place.
-
-    Returns selected row IDs in ascending int64 order. The writer can read the
-    resulting memmap as FP32. Use vocabulary_rank and apply_vocabulary directly
-    to retain coefficients or to explicitly supply the separate template arm.
-    """
-    if decoded_rw_memmap.shape!=(151936,2048) or decoded_rw_memmap.dtype!=np.float32:
-        raise ValueError("X72 Qwen vocabulary shape or dtype differs")
-    if not isinstance(decoded_rw_memmap,np.memmap) or not decoded_rw_memmap.flags.writeable:
-        raise ValueError("X72 requires an independent writable FP32 NumPy memmap")
-    chosen=vocabulary_rank(original_reader,decoded_rw_memmap,frequencies)
-    apply_vocabulary(chosen,original_reader,decoded_rw_memmap)
-    decoded_rw_memmap.flush()
-    return chosen
