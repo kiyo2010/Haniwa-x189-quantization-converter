@@ -4,7 +4,7 @@ Hugging FaceのBF16言語モデルをX189で量子化し、標準GGUFに変換�
 
 ## インストール
 
-Linux x86-64とPython 3.12を使用します。入力と依存関係に加えて、作業用ディスクに25 GB以上の空きを用意してください。CUDAで変換する場合はCUDA 12.8対応のNVIDIAドライバーが必要です。
+Linux x86-64とPython 3.12を使用します。作業用ディスクには、F32へ展開したモデル、書き出し途中のテンソル、完成GGUFを置く空きが必要です。CUDAで変換する場合はCUDA 12.8対応のNVIDIAドライバーが必要です。
 
 リポジトリのルートで仮想環境を作ります。次の例はCUDA用の依存関係をインストールします。
 
@@ -30,9 +30,9 @@ CUDA_VISIBLE_DEVICES=0 python -m x189_clean convert \
   --work "$WORK" --output "$OUTPUT" --device cuda:0
 ```
 
-`$BF16` は `config.json`、トークナイザー、BF16重みが揃ったディレクトリです。分割safetensorsと対応するPyTorch state dictionaryも処理します。`$CALIBRATION_TEXT` はモデルの用途に合ったテキスト、`$WORK` は書き込み可能な作業先、`$OUTPUT` は新規GGUFのファイル名です。GPUのない環境では `--device cpu` を指定できます。校正の範囲は `--context` と `--chunks` で調整します。
+`$BF16` は `config.json`、トークナイザー、BF16重みが揃ったディレクトリです。分割safetensorsと対応するPyTorch state dictionaryも処理します。`$CALIBRATION_TEXT` はモデルの用途に合ったテキスト、`$WORK` は書き込み可能な作業先、`$OUTPUT` は新規GGUFのファイル名です。GPUのない環境では `--device cpu` を指定できます。校正の範囲は `--context` と `--chunks` で調整します。対象モデルは、llama.cppでGGUFへの変換と重要度の計測の両方が可能な言語モデルです。
 
-汎用レシピはモデルの入力活性の対角二次モーメントを採り、行列形状と役割に応じて8次元格子量子化、標準IQ、低ランク補正、語彙残差を適用します。格子で量子化したテンソルは、その復元値を標準GGUFのF32として格納します。IQブロックを割り当てたテンソルはIQ形式で格納します。GGUFの `x189.recipe` に方式名を保存し、テンソル別の処理は作業先の `<出力名>.x189.json` に記録します。
+汎用レシピはモデルの入力活性の対角二次モーメントを採り、行列形状と役割に応じて8次元格子量子化、標準IQ、低ランク補正、語彙残差を適用します。格子で量子化したテンソルは、その復元値を標準GGUFのF32として格納します。IQブロックを割り当てたテンソルはIQ形式で格納します。F32で格納した割合に応じて、GGUFの容量は元のBF16重みより大きくなる場合があります。GGUFの `x189.recipe` に `X189-Generic-v1` を保存し、テンソル別の処理は作業先の `<出力名>.x189.json` に記録します。
 
 ## Qwen3-1.7Bの固定レシピ
 
@@ -61,7 +61,7 @@ hf download Qwen/Qwen3-1.7B \
   model-00002-of-00002.safetensors --local-dir "$BF16"
 ```
 
-## 変換する
+### 固定レシピで変換する
 
 ```sh
 CUDA_VISIBLE_DEVICES=0 python -m x189_clean \
