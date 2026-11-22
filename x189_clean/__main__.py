@@ -203,11 +203,16 @@ def run(args):
 
 
 def main():
+    if sys.argv[1:2] == ["gui"]:
+        from .gui import main as gui_main
+
+        return gui_main(sys.argv[2:])
     if sys.argv[1:2] in (["convert"],["list-models"]):
         from .generic import cli
         return cli(sys.argv[1],sys.argv[2:])
     parser = argparse.ArgumentParser(description=__doc__,
-        epilog="For other BF16 models, run 'python -m x189_clean convert --help'. "
+        epilog="Open the desktop app with 'python -m x189_clean gui'. "
+               "For other BF16 models, run 'python -m x189_clean convert --help'. "
                "Use 'python -m x189_clean list-models --help' to list architectures.")
     for key in ("checkpoint","kftt","ggml-lib","llama-source","work","output"):
         parser.add_argument("--"+key,type=lambda value:Path(value).expanduser().resolve(),required=True)

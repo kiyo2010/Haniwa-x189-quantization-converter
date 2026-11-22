@@ -16,6 +16,10 @@ llama.cpp and ggml are provided by ggml-org and their contributors under
 the MIT license. See the selected release for its dependency notices.
 https://github.com/ggml-org/llama.cpp/blob/8777c0c833effb3dec51f8db4f49f5c8b234c644/LICENSE
 
+PySide6 Essentials and Shiboken6 are provided by the Qt for Python project.
+See the upstream project for the LGPLv3, GPLv3, and commercial license options.
+https://doc.qt.io/qtforpython-6/
+
 Independently obtained model and corpus
 ---------------------------------------
 Qwen3-1.7B is provided by Qwen under the Apache License, Version 2.0.

@@ -1,6 +1,6 @@
 # X189 BF16 → GGUF
 
-Hugging FaceのBF16言語モデルをX189で量子化し、標準GGUFに変換するCLIです。対応アーキテクチャは使用するllama.cppの変換器と推論ランタイムで決まります。生成したGGUFはトークナイザーを内蔵します。
+Hugging FaceのBF16言語モデルをX189で量子化し、標準GGUFに変換するソフトです。GUIとCLIで同じ汎用レシピを実行できます。対応アーキテクチャは使用するllama.cppの変換器と推論ランタイムで決まります。生成したGGUFはトークナイザーを内蔵します。
 
 ## インストール
 
@@ -16,7 +16,20 @@ python -m pip install --resume-retries 30 \
   --extra-index-url https://pypi.org/simple -r requirements.txt
 ```
 
-## BF16モデルをX189で変換する
+## GUIでBF16モデルを変換する
+
+上の仮想環境を有効にした状態で、デスクトップ用の依存関係を追加して起動します。
+
+```sh
+python -m pip install -r requirements-gui.txt
+python -m x189_clean gui
+```
+
+1. **BF16モデル** のフォルダ、UTF-8の **校正テキスト**、**GGUFの保存先** を選びます。保存先には新しいファイル名を指定します。
+2. **llama.cpp 設定** で、公式の変換スクリプトを含むソースフォルダと、同じ版のLinux x64 CPUバイナリフォルダを選びます。変換デバイスはCPUかGPU（CUDA）を選べます。設定は次回起動時にも使えます。[検証版 llama.cpp b12487](https://github.com/ggml-org/llama.cpp/releases/tag/b12487)
+3. **変換を開始** を押します。校正と量子化の進行状況が表示されます。検証が完了すると、選んだ場所にGGUFが保存され、**保存先を開く** が使えるようになります。
+
+## CLIでBF16モデルを変換する
 
 元のHugging Faceチェックポイントのディレクトリ、校正用UTF-8テキスト、同じ版のllama.cppソース・バイナリを用意します。バイナリのディレクトリには `llama-imatrix`、`llama-tokenize`、`libggml-base.so` が必要です。[検証版 llama.cpp b12487](https://github.com/ggml-org/llama.cpp/releases/tag/b12487)
 
