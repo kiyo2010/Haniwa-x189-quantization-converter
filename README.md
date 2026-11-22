@@ -25,6 +25,8 @@ python -m pip install -r requirements-gui.txt
 python -m x189_clean gui
 ```
 
+X11でQtのxcbプラグインを読み込めない場合は、ディストリビューションのXCBカーソルライブラリを導入してください。Ubuntuでは `libxcb-cursor0`、Arch Linuxでは `xcb-util-cursor` です。[QtのX11要件](https://doc.qt.io/qt-6.10/linux-requirements.html)
+
 1. **BF16モデル** のフォルダ、UTF-8の **校正テキスト**、**GGUFの保存先** を選びます。保存先には新しいファイル名を指定します。
 2. **llama.cpp 設定** で、公式の変換スクリプトを含むソースフォルダと、同じ版のLinux x64 CPUバイナリフォルダを選びます。変換デバイスはCPUかGPU（CUDA）を選べます。設定は次回起動時にも使えます。[検証版 llama.cpp b12487](https://github.com/ggml-org/llama.cpp/releases/tag/b12487)
 3. **変換を開始** を押します。校正と量子化の進行状況が表示されます。検証が完了すると、選んだ場所にGGUFが保存され、**保存先を開く** が使えるようになります。
